@@ -20,7 +20,7 @@ from utils import reverse_one_hot, compute_global_accuracy, fast_hist, \
 from loss import DiceLoss, loss_calc
 
 
-# noinspection DuplicatedCode ggggggggggggggggggggggggggggggggggggggggg
+# noinspection DuplicatedCode ggggggggggggggggggpggggggggggggggggggggggg
 def val(args, model, dataloader):
     print("\n", "=" * 100, sep="")
     print('Start val!')
