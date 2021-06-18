@@ -92,7 +92,8 @@ class IDDA(torch.utils.data.Dataset):
         label = RandomCrop(self.image_size, seed, pad_if_needed=True)(label)
         # =====================================
 
-        scale = random.choice(self.scale)
+        # scale = random.choice(self.scale)
+        scale = 1
         scale = (int(self.image_size[0] * scale), int(self.image_size[1] * scale))
 
         # randomly resize image and random crop
@@ -110,7 +111,7 @@ class IDDA(torch.utils.data.Dataset):
         # Augmentation
         # =====================================
         img, label = augmentation(img, label)
-        img = augmentation_pixel(img)
+        # img = augmentation_pixel(img)
         # =====================================
 
         # image -> [C, H, W]
