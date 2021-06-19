@@ -32,7 +32,6 @@ def augmentation_pixel(image, filename="", p=0.5):
 
     return image
 
-
 # ######################################################################################################################
 # 1) open idda rgb image at index i
 # 2) open its respective label

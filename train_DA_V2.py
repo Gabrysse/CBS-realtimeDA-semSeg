@@ -420,6 +420,6 @@ if __name__ == '__main__':
         '--optimizer', 'sgd',
         # '--pretrained_model_path', './checkpoints_DA/latest_DA_model_checkpoint.pth',
         '--checkpoint_step', '2',
-        '--loss', 'dice',
+        '--loss', 'crossentropy', # dice
     ]
     main(params)
