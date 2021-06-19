@@ -22,7 +22,7 @@ from PIL import Image
 from loss import DiceLoss, loss_calc
 
 # noinspection DuplicatedCode
-def val(args, model, dataloader):
+def val(args, model, dataloader, epoch):
     print("\n", "=" * 100, sep="")
     print('Start val!')
     # label_info = get_label_info(csv_path)
@@ -268,7 +268,7 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
         #
         # **** Validation model saving ****
         if epoch % args.validation_step == 0 and epoch != 0:
-            precision, miou = val(args, model, dataloader_val)
+            precision, miou = val(args, model, dataloader_val, epoch)
             if miou > max_miou:
                 max_miou = miou
                 os.makedirs(args.save_model_path, exist_ok=True)
@@ -403,7 +403,7 @@ def main(params):
     train(args, model, model_D, optimizer, optimizer_D,
           dataloader_train_S, dataloader_train_T, dataloader_val, curr_epoch)
 
-    val(args, model, dataloader_val)
+    val(args, model, dataloader_val, args.num_epochs)
 
 
 if __name__ == '__main__':
