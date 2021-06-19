@@ -19,8 +19,7 @@ from utils import reverse_one_hot, compute_global_accuracy, fast_hist, \
     per_class_iu, adjust_learning_rate
 from loss import DiceLoss, loss_calc
 
-
-# noinspection DuplicatedCode ppppppp
+# noinspection DuplicatedCode
 def val(args, model, dataloader):
     print("\n", "=" * 100, sep="")
     print('Start val!')
@@ -46,6 +45,15 @@ def val(args, model, dataloader):
             if args.loss == 'dice':
                 label = reverse_one_hot(label)
             label = np.array(label.cpu())
+
+            #Image saving
+            if i < 4:
+                current_image = transforms.functional.to_pil_image(data[0])
+                current_image.save("imgResults/" + str(i) + "-" + str(epoch) + "_camvidOriginal.png")
+                current_label = colorize_mask(np.asarray(label, dtype=np.uint8))
+                current_label.save("imgResults/" + str(i) + "-" + str(epoch) + "_label.png")
+                current_predi = colorize_mask(np.asarray(predict, dtype=np.uint8))
+                current_predi.save("imgResults/" + str(i) + "-" + str(epoch) + "_predict.png")
 
             # compute per pixel accuracy
 

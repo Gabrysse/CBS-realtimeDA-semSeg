@@ -102,7 +102,8 @@ class CamVid(torch.utils.data.Dataset):
         # img = F.crop(img, i, j, th, tw)
         # =====================================
 
-        scale = random.choice(self.scale)
+        # scale = random.choice(self.scale)
+        scale = 1
         scale = (int(self.image_size[0] * scale), int(self.image_size[1] * scale))
 
         # randomly resize image and random crop
@@ -136,9 +137,9 @@ class CamVid(torch.utils.data.Dataset):
             img, label = augmentation(img, label)
 
         # augment pixel image
-        if self.mode == 'train':
-            # set a probability of 0.5
-            img = augmentation_pixel(img)
+        # if self.mode == 'train':
+        #     # set a probability of 0.5
+        #     img = augmentation_pixel(img)
 
         # image -> [C, H, W]
         img = Image.fromarray(img)
