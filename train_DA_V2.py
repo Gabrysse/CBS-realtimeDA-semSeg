@@ -16,7 +16,9 @@ import numpy as np
 from model.discriminator import Discriminator
 from utils import poly_lr_scheduler
 from utils import reverse_one_hot, compute_global_accuracy, fast_hist, \
-    per_class_iu, adjust_learning_rate
+    per_class_iu, adjust_learning_rate, colorize_mask
+from torchvision import transforms
+from PIL import Image
 from loss import DiceLoss, loss_calc
 
 # noinspection DuplicatedCode
@@ -406,7 +408,7 @@ def main(params):
 
 if __name__ == '__main__':
     params = [
-        '--num_epochs', '100',
+        '--num_epochs', '50',
         '--learning_rate', '2.5e-2',
         '--learning_rate_D', '1e-4',
         '--dataCamVid', '../datasets/CamVid/',
