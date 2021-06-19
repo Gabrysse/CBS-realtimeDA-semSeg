@@ -408,7 +408,7 @@ def main(params):
 
 if __name__ == '__main__':
     params = [
-        '--num_epochs', '50',
+        '--num_epochs', '100',
         '--learning_rate', '2.5e-2',
         '--learning_rate_D', '1e-4',
         '--dataCamVid', '../datasets/CamVid/',
