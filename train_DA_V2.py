@@ -16,8 +16,9 @@ import numpy as np
 from model.discriminator import Discriminator
 from utils import poly_lr_scheduler
 from utils import reverse_one_hot, compute_global_accuracy, fast_hist, \
-    per_class_iu, adjust_learning_rate
+    per_class_iu, adjust_learning_rate, prob_2_entropy
 from loss import DiceLoss, loss_calc
+
 
 # noinspection DuplicatedCode
 def val(args, model, dataloader):
@@ -162,7 +163,10 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
             with autocast():
                 pred_target, _, _ = model(data)
 
-                D_out = model_D(F.softmax(pred_target))
+                if args.advent_loss:
+                    D_out = model_D(prob_2_entropy(F.softmax(pred_target)))
+                else:
+                    D_out = model_D(F.softmax(pred_target))
 
                 loss_adv_target = bce_loss(D_out,
                                            Variable(torch.FloatTensor(D_out.data.size()).fill_(source_label)).cuda())
@@ -182,7 +186,10 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
             pred = pred.detach()
 
             with autocast():
-                D_out = model_D(F.softmax(pred))
+                if args.advent_loss:
+                    D_out = model_D(prob_2_entropy(F.softmax(pred)))
+                else:
+                    D_out = model_D(F.softmax(pred))
 
                 loss_D = bce_loss(D_out,
                                   Variable(torch.FloatTensor(D_out.data.size()).fill_(source_label)).cuda())
@@ -195,7 +202,10 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
             pred_target = pred_target.detach()
 
             with autocast():
-                D_out = model_D(F.softmax(pred_target))
+                if args.advent_loss:
+                    D_out = model_D(prob_2_entropy(F.softmax(pred_target)))
+                else:
+                    D_out = model_D(F.softmax(pred_target))
 
                 loss_D = bce_loss(D_out,
                                   Variable(torch.FloatTensor(D_out.data.size()).fill_(target_label)).cuda())
@@ -293,6 +303,7 @@ def main(params):
     parser.add_argument('--save_model_path', type=str, default=None, help='path to save model')
     parser.add_argument('--optimizer', type=str, default='rmsprop', help='optimizer, support rmsprop, sgd, adam')
     parser.add_argument('--loss', type=str, default='dice', help='loss function, dice or crossentropy')
+    parser.add_argument('--advent_loss', type=bool, default=False, help='enables loss based on prediction entropy')
     parser.add_argument('--gan', type=str, default='Vanilla', help='adversial loss function, bce or mse')
     parser.add_argument("--lambda_seg", type=float, default=0.1, help="lambda_seg.")
     parser.add_argument("--lambda_adv_target", type=float, default=0.001, help="lambda_adv for adversarial training.")
@@ -412,5 +423,6 @@ if __name__ == '__main__':
         # '--pretrained_model_path', './checkpoints_DA/latest_DA_model_checkpoint.pth',
         '--checkpoint_step', '2',
         '--loss', 'dice',
+        '--advent_loss', 'false'
     ]
     main(params)

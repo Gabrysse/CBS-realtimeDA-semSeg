@@ -258,6 +258,12 @@ def per_class_iu(hist):
     epsilon = 1e-5
     return (np.diag(hist)) / (hist.sum(1) + hist.sum(0) - np.diag(hist) + epsilon)
 
+def prob_2_entropy(prob):
+    """ convert probabilistic prediction maps to weighted self-information maps
+    """
+    n, c, h, w = prob.size()
+    return -torch.mul(prob, torch.log2(prob + 1e-30)) / np.log2(c)
+
 
 class RandomCrop(object):
     """Crop the given PIL Image at a random location.
