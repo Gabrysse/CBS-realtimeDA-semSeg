@@ -47,18 +47,15 @@ def augmentation_pixel(image, filename="", p=0.5):
 # label_path = ../IDDA/labels
 
 # noinspection DuplicatedCode,PyShadowingNames
-def class_base_styling(image, label, class_id=7):
-    style_id = 0
-
+def class_base_styling(image, label, class_id=7, style_id=0):
+    # Creation of styling model
     style_model = ut.create_style_model(style_id)
 
     fg_image = ut.get_masked_image(label, image, category=class_id, bg=0)
-    # Get image with mask showing everything except class_id 13
     bg_image = ut.get_masked_image(label, image, category=class_id, bg=1)
     ut.save_image("fg_image.png", fg_image)
     ut.save_image("bg_image.png", bg_image)
 
-    # image = ut.load_image_style(img_fname, scale=1.0)
     image = image.transpose(2, 0, 1)
     image = torch.from_numpy(image.copy()).unsqueeze(0)
     image = image.type(torch.float32)
@@ -68,13 +65,14 @@ def class_base_styling(image, label, class_id=7):
     # Apply local style to fg
     fg_styled = image_style1 * (fg_image != 0)
     # Apply local style to bg
-    bg_styled = image_style1 * (bg_image != 0)
+    # bg_styled = image_style1 * (bg_image != 0)
 
     ut.save_image("final_image.png", fg_styled + bg_image)
 
     return fg_styled + bg_image
 
 
+# noinspection PyShadowingNames
 class IDDA(torch.utils.data.Dataset):
     def __init__(self, image_path, label_path, json_path, scale=(720, 1280), crop=(720, 960), loss='dice'):
         super().__init__()

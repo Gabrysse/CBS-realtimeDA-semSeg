@@ -40,6 +40,7 @@ def create_style_model(style_number=0):
     transformer = transformer_net.TransformerNet()
     # load model
     state_dict = torch.load(model_file)
+
     # remove saved deprecated running_* keys in InstanceNorm from the checkpoint
     for k in list(state_dict.keys()):
         if re.search(r'in\d+\.running_(mean|var)$', k):
@@ -69,7 +70,6 @@ def get_masked_image(label, image, category, bg=0):
     if bg:
         bin_mask = 1 - bin_mask
 
-    # image_original = denorm(image)
     # masked = bin_mask[:, :, None] * image_original
     masked = bin_mask[:, :, None] * image
 
