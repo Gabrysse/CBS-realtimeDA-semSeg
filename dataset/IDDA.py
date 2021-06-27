@@ -60,7 +60,7 @@ def class_base_styling(image, label, class_id=7):
 
     # image = ut.load_image_style(img_fname, scale=1.0)
     image = image.transpose(2, 0, 1)
-    image = torch.from_numpy(image).unsqueeze(0)
+    image = torch.from_numpy(image.copy()).unsqueeze(0)
     image = image.type(torch.float32)
     # image = transforms.Lambda(lambda x: x.mul(255))(image)
     image_style1 = ut.get_styled_image(style_model, image)
@@ -178,7 +178,7 @@ if __name__ == '__main__':
                 '../../datasets/IDDA/labels',
                 '../../datasets/IDDA/classes_info.json',
                 crop=(720, 960),
-                loss='crossentropy')
+                loss='dice')
 
     # label_info = get_label_info_IDDA('../../datasets/IDDA/classes_info.json')
     for i, (img, label) in enumerate(data):
