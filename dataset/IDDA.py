@@ -9,8 +9,9 @@ from PIL import Image
 import pandas as pd
 import numpy as np
 from utils import get_label_info_IDDA, one_hot_it, RandomCrop, reverse_one_hot, one_hot_it_v11, \
-                  one_hot_it_v11_dice_IDDA, one_hot_it_v11_IDDA, colorize_mask
+    one_hot_it_v11_dice_IDDA, one_hot_it_v11_IDDA, colorize_mask
 import random
+import utils_CBS as ut
 
 
 def augmentation(image, label, p=0.5):
@@ -46,6 +47,34 @@ def augmentation_pixel(image, filename="", p=0.5):
 # label_path = ../IDDA/labels
 
 # noinspection DuplicatedCode,PyShadowingNames
+def class_base_styling(image, label, class_id=7):
+    style_id = 0
+
+    style_model = ut.create_style_model(style_id)
+
+    fg_image = ut.get_masked_image(label, image, category=class_id, bg=0)
+    # Get image with mask showing everything except class_id 13
+    bg_image = ut.get_masked_image(label, image, category=class_id, bg=1)
+    ut.save_image("fg_image.png", fg_image)
+    ut.save_image("bg_image.png", bg_image)
+
+    # image = ut.load_image_style(img_fname, scale=1.0)
+    image = image.transpose(2, 0, 1)
+    image = torch.from_numpy(image).unsqueeze(0)
+    image = image.type(torch.float32)
+    # image = transforms.Lambda(lambda x: x.mul(255))(image)
+    image_style1 = ut.get_styled_image(style_model, image)
+
+    # Apply local style to fg
+    fg_styled = image_style1 * (fg_image != 0)
+    # Apply local style to bg
+    bg_styled = image_style1 * (bg_image != 0)
+
+    ut.save_image("final_image.png", fg_styled + bg_image)
+
+    return fg_styled + bg_image
+
+
 class IDDA(torch.utils.data.Dataset):
     def __init__(self, image_path, label_path, json_path, scale=(720, 1280), crop=(720, 960), loss='dice'):
         super().__init__()
@@ -113,6 +142,8 @@ class IDDA(torch.utils.data.Dataset):
         img, label = augmentation(img, label)
         # img = augmentation_pixel(img)
         # =====================================
+
+        img = class_base_styling(img, label, class_id=20)
 
         # image -> [C, H, W]
         img = Image.fromarray(img)
