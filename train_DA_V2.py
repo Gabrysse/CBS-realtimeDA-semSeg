@@ -69,7 +69,9 @@ def val(args, model, dataloader, epoch):
         precision = np.mean(precision_record)
         # miou = np.mean(per_class_iu(hist))
         miou_list = per_class_iu(hist)[:-1]
-        # miou_dict, miou = cal_miou(miou_list, csv_path)
+
+        miou_dict, miou = cal_miou(miou_list, '../datasets/CamVid/class_dict.csv')
+        print(miou_dict)
         miou = np.mean(miou_list)
         print(f'precision per pixel for test: {precision:.3f}')
         print(f'mIoU for validation: {miou:.3f}')
@@ -408,7 +410,7 @@ def main(params):
 
 if __name__ == '__main__':
     params = [
-        '--num_epochs', '100',
+        '--num_epochs', '50',
         '--learning_rate', '2.5e-2',
         '--learning_rate_D', '1e-4',
         '--dataCamVid', '../datasets/CamVid/',
@@ -420,7 +422,7 @@ if __name__ == '__main__':
         '--save_model_path', './checkpoints_DA',
         '--context_path', 'resnet101',  # set resnet18 or resnet101, only support resnet18 and resnet101
         '--optimizer', 'sgd',
-        # '--pretrained_model_path', './checkpoints_DA/latest_DA_model_checkpoint.pth',
+        '--pretrained_model_path', './checkpoints_DA/latest_DA_model_checkpoint.pth',
         '--checkpoint_step', '2',
         '--loss', 'crossentropy', # dice
     ]
