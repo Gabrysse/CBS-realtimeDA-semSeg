@@ -19,6 +19,7 @@ from utils import reverse_one_hot, compute_global_accuracy, fast_hist, \
     per_class_iu, adjust_learning_rate
 from loss import DiceLoss, loss_calc
 
+
 # noinspection DuplicatedCode
 def val(args, model, dataloader):
     print("\n", "=" * 100, sep="")

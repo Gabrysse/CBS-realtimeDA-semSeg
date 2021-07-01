@@ -64,13 +64,13 @@ def get_masked_image(label, image, category, bg=0):
     # output = label.transpose(1, 2, 0)
     # output = np.asarray(np.argmax(label, axis=2), dtype=np.uint8)
 
+    # IDDA labels contains information only on R
     output = label[:, :, 0]
 
     bin_mask = (output == category).astype('uint8')
     if bg:
         bin_mask = 1 - bin_mask
 
-    # masked = bin_mask[:, :, None] * image_original
     masked = bin_mask[:, :, None] * image
 
     # image = Image.fromarray(masked.astype('uint8'))

@@ -59,8 +59,9 @@ def class_base_styling(image, label, class_id=7, style_id=0):
     image = image.transpose(2, 0, 1)
     image = torch.from_numpy(image.copy()).unsqueeze(0)
     image = image.type(torch.float32)
-    # image = transforms.Lambda(lambda x: x.mul(255))(image)
+
     image_style1 = ut.get_styled_image(style_model, image)
+    # ut.save_image("imagestyle.png", image_style1)
 
     # Apply local style to fg
     fg_styled = image_style1 * (fg_image != 0)
@@ -141,7 +142,7 @@ class IDDA(torch.utils.data.Dataset):
         # img = augmentation_pixel(img)
         # =====================================
 
-        img = class_base_styling(img, label, class_id=20)
+        img = class_base_styling(img, label, class_id=8, style_id=2)
 
         # image -> [C, H, W]
         img = Image.fromarray(img)
