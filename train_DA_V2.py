@@ -398,7 +398,7 @@ def main(params):
 
 if __name__ == '__main__':
     params = [
-        '--num_epochs', '100',
+        '--num_epochs', '50',
         '--learning_rate', '2.5e-2',
         '--learning_rate_D', '1e-4',
         '--dataCamVid', '../datasets/CamVid/',
@@ -412,6 +412,6 @@ if __name__ == '__main__':
         '--optimizer', 'sgd',
         # '--pretrained_model_path', './checkpoints_DA/latest_DA_model_checkpoint.pth',
         '--checkpoint_step', '2',
-        '--loss', 'dice',
+        '--loss', 'crossentropy',
     ]
     main(params)
