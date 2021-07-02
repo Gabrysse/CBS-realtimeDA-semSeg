@@ -397,6 +397,8 @@ def main(params):
 
 
 if __name__ == '__main__':
+    # torch.multiprocessing.set_start_method('spawn')
+
     params = [
         '--num_epochs', '50',
         '--learning_rate', '2.5e-2',

@@ -36,7 +36,7 @@ def get_styled_image(style_model, image):
 
 
 def create_style_model(style_number=0):
-    model_file = glob.glob('../model/styles/*.pth')[style_number]
+    model_file = glob.glob('./model/styles/*.pth')[style_number]
     transformer = transformer_net.TransformerNet()
     # load model
     state_dict = torch.load(model_file)
