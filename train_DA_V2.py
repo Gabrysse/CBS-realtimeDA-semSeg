@@ -138,11 +138,10 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
             _, batch = next(sourceloader_iter)
             data, label = batch
 
-            # for j in range(args.batch_size):
-            #     img = transforms.ToPILImage()(data[j])
-            #     img.save(str(j) + ".png")
-
             for j in range(args.batch_size):
+                # img = transforms.ToPILImage()(data[j])
+                # img.save(str(j) + ".png")
+
                 stylzed_img = class_base_styling(data[j].numpy(), label[j].numpy(), class_id=7, style_id=2, loss=args.loss)
                 data[j] = torch.from_numpy(stylzed_img.transpose(2, 0, 1))
 
@@ -151,9 +150,8 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
 
                 data[j] = transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))(data[j])
 
-            # for j in range(args.batch_size):
-            #     img = transforms.ToPILImage()(data[j])
-            #     img.save(str(j) + "_SN.png")
+                # img = transforms.ToPILImage()(data[j])
+                # img.save(str(j) + "_SN.png")
 
             data = data.cuda()
             label = label.long().cuda()
