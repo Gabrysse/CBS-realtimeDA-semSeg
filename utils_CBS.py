@@ -7,7 +7,6 @@ from PIL import Image
 from torchvision import transforms
 from torch.autograd import Variable
 import torch.nn.functional as F
-import cv2
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.patches import Polygon
 from matplotlib.figure import Figure
@@ -32,8 +31,8 @@ def class_base_styling(image, label, class_id=7, style_id=0, loss='crossentropy'
 
     fg_image = get_masked_image(label, image.transpose(1, 2, 0), category=class_id, bg=0)
     bg_image = get_masked_image(label, image.transpose(1, 2, 0), category=class_id, bg=1)
-    save_image("fg_image.png", fg_image)
-    save_image("bg_image.png", bg_image)
+    # save_image("fg_image.png", fg_image)
+    # save_image("bg_image.png", bg_image)
 
     # image = image.transpose(2, 0, 1)
     image = torch.from_numpy(image.copy()).unsqueeze(0)
@@ -49,7 +48,7 @@ def class_base_styling(image, label, class_id=7, style_id=0, loss='crossentropy'
     # Apply local style to bg
     # bg_styled = image_style1 * (bg_image != 0)
 
-    save_image("final_image.png", fg_styled + bg_image)
+    # save_image("final_image.png", fg_styled + bg_image)
 
     return fg_styled + bg_image
 

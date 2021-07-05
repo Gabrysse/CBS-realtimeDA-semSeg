@@ -47,30 +47,30 @@ def augmentation_pixel(image, filename="", p=0.5):
 # label_path = ../IDDA/labels
 
 # noinspection DuplicatedCode,PyShadowingNames
-def class_base_styling(image, label, class_id=7, style_id=0):
-    # Creation of styling model
-    style_model = ut.create_style_model(style_id, path='../model/styles/*.pth')
-
-    fg_image = ut.get_masked_image(label, image, category=class_id, bg=0)
-    bg_image = ut.get_masked_image(label, image, category=class_id, bg=1)
-    ut.save_image("fg_image.png", fg_image)
-    ut.save_image("bg_image.png", bg_image)
-
-    image = image.transpose(2, 0, 1)
-    image = torch.from_numpy(image.copy()).unsqueeze(0)
-    image = image.type(torch.float32)
-
-    image_style1 = ut.get_styled_image(style_model, image)
-    # ut.save_image("imagestyle.png", image_style1)
-
-    # Apply local style to fg
-    fg_styled = image_style1 * (fg_image != 0)
-    # Apply local style to bg
-    # bg_styled = image_style1 * (bg_image != 0)
-
-    ut.save_image("final_image.png", fg_styled + bg_image)
-
-    return fg_styled + bg_image
+# def class_base_styling(image, label, class_id=7, style_id=0):
+#     # Creation of styling model
+#     style_model = ut.create_style_model(style_id, path='../model/styles/*.pth')
+#
+#     fg_image = ut.get_masked_image(label, image, category=class_id, bg=0)
+#     bg_image = ut.get_masked_image(label, image, category=class_id, bg=1)
+#     ut.save_image("fg_image.png", fg_image)
+#     ut.save_image("bg_image.png", bg_image)
+#
+#     image = image.transpose(2, 0, 1)
+#     image = torch.from_numpy(image.copy()).unsqueeze(0)
+#     image = image.type(torch.float32)
+#
+#     image_style1 = ut.get_styled_image(style_model, image)
+#     # ut.save_image("imagestyle.png", image_style1)
+#
+#     # Apply local style to fg
+#     fg_styled = image_style1 * (fg_image != 0)
+#     # Apply local style to bg
+#     # bg_styled = image_style1 * (bg_image != 0)
+#
+#     ut.save_image("final_image.png", fg_styled + bg_image)
+#
+#     return fg_styled + bg_image
 
 
 # noinspection PyShadowingNames
