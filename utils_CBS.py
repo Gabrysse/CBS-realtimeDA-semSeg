@@ -37,7 +37,9 @@ def class_base_styling(image, label, class_id=7, style_id=0, loss='crossentropy'
 
     # image = image.transpose(2, 0, 1)
     image = torch.from_numpy(image.copy()).unsqueeze(0)
-    # image = image.cuda()
+
+    if torch.cuda.is_available():
+        image = image.cuda()
 
     image_style1 = get_styled_image(style_model, image)
     # ut.save_image("imagestyle.png", image_style1)
@@ -76,7 +78,10 @@ def create_style_model(style_number=0, path='./model/styles/*.pth'):
         if re.search(r'in\d+\.running_(mean|var)$', k):
             del state_dict[k]
     transformer.load_state_dict(state_dict)
-    # transformer.to(0)
+
+    if torch.cuda.is_available():
+        transformer.to(0)
+
     transformer.eval()
     return transformer
 
