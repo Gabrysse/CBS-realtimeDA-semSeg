@@ -37,7 +37,7 @@ def class_base_styling(image, label, class_id=7, style_id=0, loss='crossentropy'
 
     # image = image.transpose(2, 0, 1)
     image = torch.from_numpy(image.copy()).unsqueeze(0)
-    image = image.type(torch.float32)
+    # image = image.cuda()
 
     image_style1 = get_styled_image(style_model, image)
     # ut.save_image("imagestyle.png", image_style1)
@@ -95,7 +95,7 @@ def get_masked_image(label, image, category, bg=0):
     # output = label.transpose(1, 2, 0)
     # output = np.asarray(np.argmax(label, axis=2), dtype=np.uint8)
 
-    output = label[:, :, 0]
+    output = label[:, :]
 
     bin_mask = (output == category).astype('uint8')
     if bg:
