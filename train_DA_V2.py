@@ -6,6 +6,7 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
 from dataset.CamVid import CamVid
+from torchvision import transforms
 from dataset.IDDA import IDDA
 import os
 from model.build_BiSeNet import BiSeNet
@@ -138,8 +139,13 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
             data, label = batch
 
             for j in range(args.batch_size):
-                stylzed_img = class_base_styling(data[j].numpy(), label[j].numpy(), class_id=7, style_id=2)
+                stylzed_img = class_base_styling(data[j].numpy(), label[j].numpy(), class_id=7, style_id=2, loss=args.loss)
                 data[j] = torch.from_numpy(stylzed_img.transpose(2, 0, 1))
+
+                # img = transforms.ToPILImage()(data[j])
+                # img.save(str(j) + "_S.png")
+
+                data[j] = transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))(data[j])
 
             data = data.cuda()
             label = label.long().cuda()

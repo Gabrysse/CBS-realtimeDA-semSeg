@@ -23,9 +23,12 @@ import pandas as pd
 
 
 # image and label from train_DA_V2 come in a shape like (D, H, W)
-def class_base_styling(image, label, class_id=7, style_id=0):
+def class_base_styling(image, label, class_id=7, style_id=0, loss='crossentropy'):
     # Creation of styling model
     style_model = create_style_model(style_id)
+
+    if loss == 'dice':
+        label = np.argmax(image, axis=0)
 
     fg_image = get_masked_image(label, image.transpose(1, 2, 0), category=class_id, bg=0)
     bg_image = get_masked_image(label, image.transpose(1, 2, 0), category=class_id, bg=1)
@@ -92,8 +95,7 @@ def get_masked_image(label, image, category, bg=0):
     # output = label.transpose(1, 2, 0)
     # output = np.asarray(np.argmax(label, axis=2), dtype=np.uint8)
 
-    # IDDA labels contains information only on R
-    output = label[:, :]
+    output = label[:, :, 0]
 
     bin_mask = (output == category).astype('uint8')
     if bg:
