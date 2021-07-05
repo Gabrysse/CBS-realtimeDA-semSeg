@@ -49,7 +49,7 @@ def augmentation_pixel(image, filename="", p=0.5):
 # noinspection DuplicatedCode,PyShadowingNames
 def class_base_styling(image, label, class_id=7, style_id=0):
     # Creation of styling model
-    style_model = ut.create_style_model(style_id)
+    style_model = ut.create_style_model(style_id, path='../model/styles/*.pth')
 
     fg_image = ut.get_masked_image(label, image, category=class_id, bg=0)
     bg_image = ut.get_masked_image(label, image, category=class_id, bg=1)
@@ -142,7 +142,7 @@ class IDDA(torch.utils.data.Dataset):
         # img = augmentation_pixel(img)
         # =====================================
 
-        img = class_base_styling(img, label, class_id=8, style_id=2)
+        # img = class_base_styling(img, label, class_id=8, style_id=2)
 
         # image -> [C, H, W]
         img = Image.fromarray(img)

@@ -18,6 +18,7 @@ from utils import poly_lr_scheduler
 from utils import reverse_one_hot, compute_global_accuracy, fast_hist, \
     per_class_iu, adjust_learning_rate
 from loss import DiceLoss, loss_calc
+from utils_CBS import class_base_styling
 
 
 # noinspection DuplicatedCode
@@ -135,6 +136,11 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
             # train with SOURCE ***********************************************
             _, batch = next(sourceloader_iter)
             data, label = batch
+
+            for j in range(args.batch_size):
+                stylzed_img = class_base_styling(data[j].numpy(), label[j].numpy(), class_id=7, style_id=2)
+                data[j] = torch.from_numpy(stylzed_img.transpose(2, 0, 1))
+
             data = data.cuda()
             label = label.long().cuda()
 
@@ -397,8 +403,6 @@ def main(params):
 
 
 if __name__ == '__main__':
-    # torch.multiprocessing.set_start_method('spawn')
-
     params = [
         '--num_epochs', '50',
         '--learning_rate', '2.5e-2',

@@ -22,6 +22,33 @@ import argparse
 import pandas as pd
 
 
+# image and label from train_DA_V2 come in a shape like (D, H, W)
+def class_base_styling(image, label, class_id=7, style_id=0):
+    # Creation of styling model
+    style_model = create_style_model(style_id)
+
+    fg_image = get_masked_image(label, image.transpose(1, 2, 0), category=class_id, bg=0)
+    bg_image = get_masked_image(label, image.transpose(1, 2, 0), category=class_id, bg=1)
+    save_image("fg_image.png", fg_image)
+    save_image("bg_image.png", bg_image)
+
+    # image = image.transpose(2, 0, 1)
+    image = torch.from_numpy(image.copy()).unsqueeze(0)
+    image = image.type(torch.float32)
+
+    image_style1 = get_styled_image(style_model, image)
+    # ut.save_image("imagestyle.png", image_style1)
+
+    # Apply local style to fg
+    fg_styled = image_style1 * (fg_image != 0)
+    # Apply local style to bg
+    # bg_styled = image_style1 * (bg_image != 0)
+
+    save_image("final_image.png", fg_styled + bg_image)
+
+    return fg_styled + bg_image
+
+
 @torch.no_grad()
 # N.B.: it works with torch.float32 tensor only
 def get_styled_image(style_model, image):
@@ -35,8 +62,8 @@ def get_styled_image(style_model, image):
     return img
 
 
-def create_style_model(style_number=0):
-    model_file = glob.glob('./model/styles/*.pth')[style_number]
+def create_style_model(style_number=0, path='./model/styles/*.pth'):
+    model_file = glob.glob(path)[style_number]
     transformer = transformer_net.TransformerNet()
     # load model
     state_dict = torch.load(model_file)
@@ -52,6 +79,7 @@ def create_style_model(style_number=0):
 
 
 @torch.no_grad()
+# image and label must be in the shape as follows: (H, W, D)
 def get_masked_image(label, image, category, bg=0):
     # print("image -> type: ", type(image), " shape: ", image.shape, "\n")
 
@@ -65,7 +93,7 @@ def get_masked_image(label, image, category, bg=0):
     # output = np.asarray(np.argmax(label, axis=2), dtype=np.uint8)
 
     # IDDA labels contains information only on R
-    output = label[:, :, 0]
+    output = label[:, :]
 
     bin_mask = (output == category).astype('uint8')
     if bg:
