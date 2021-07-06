@@ -15,8 +15,7 @@ from tensorboardX import SummaryWriter
 import tqdm
 import numpy as np
 from model.discriminator import Discriminator
-from utils import poly_lr_scheduler
-from utils import reverse_one_hot, compute_global_accuracy, fast_hist, \
+from utils import cal_miou, reverse_one_hot, compute_global_accuracy, fast_hist, \
     per_class_iu, adjust_learning_rate
 from loss import DiceLoss, loss_calc
 from utils_CBS import class_base_styling
@@ -24,7 +23,7 @@ import random
 
 
 # noinspection DuplicatedCode
-def val(args, model, dataloader):
+def val(args, model, dataloader, csv_path='../datasets/CamVid/class_dict.csv'):
     print("\n", "=" * 100, sep="")
     print('Start val!')
     # label_info = get_label_info(csv_path)
@@ -55,17 +54,16 @@ def val(args, model, dataloader):
             precision = compute_global_accuracy(predict, label)
             hist += fast_hist(label.flatten(), predict.flatten(), args.num_classes)
 
-            # there is no need to transform the one-hot array to visual RGB array
-            # predict = colour_code_segmentation(np.array(predict), label_info)
-            # label = colour_code_segmentation(np.array(label), label_info)
             precision_record.append(precision)
         precision = np.mean(precision_record)
-        # miou = np.mean(per_class_iu(hist))
+
         miou_list = per_class_iu(hist)[:-1]
-        # miou_dict, miou = cal_miou(miou_list, csv_path)
+        miou_dict, miou = cal_miou(miou_list, csv_path)
         miou = np.mean(miou_list)
         print(f'precision per pixel for test: {precision:.3f}')
         print(f'mIoU for validation: {miou:.3f}')
+
+        print(miou_dict)
         # miou_str = ''
         # for key in miou_dict:
         #     miou_str += '{}:{},\n'.format(key, miou_dict[key])
@@ -74,7 +72,7 @@ def val(args, model, dataloader):
 
         print("=" * 100, "\n", sep="")
 
-        return precision, miou
+        return precision, miou, miou_list
 
 
 # noinspection DuplicatedCode
@@ -98,6 +96,9 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
     # labels for adversarial training
     source_label = 0
     target_label = 1
+
+    lambda_p = 0.5
+    prob_miou = np.ones(12)
 
     for epoch in range(curr_epoch + 1, args.num_epochs + 1):
 
@@ -149,7 +150,9 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
                 # img = transforms.ToPILImage()(data[j])
                 # img.save(str(j) + ".png")
 
-                stylzed_img = class_base_styling(data[j].numpy(), label[j].numpy(), class_id=7, style_id=2, loss=args.loss)
+                stylzed_img = class_base_styling(data[j].numpy(), label[j].numpy(), class_id=indexes_toStyle,
+                                                 style_id=2, loss=args.loss)
+
                 data[j] = torch.from_numpy(stylzed_img.transpose(2, 0, 1))
 
                 # img = transforms.ToPILImage()(data[j])
@@ -284,12 +287,16 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
         # **** Validation model saving ****
         args.validation_step = 1
         if epoch % args.validation_step == 0 and epoch != 0:
-            precision, miou = val(args, model, dataloader_val)
-            if miou > max_miou:
-                max_miou = miou
-                os.makedirs(args.save_model_path, exist_ok=True)
-                torch.save(model.module.state_dict(),
-                           os.path.join(args.save_model_path, 'best_dice_loss.pth'))
+            precision, miou, miou_list = val(args, model, dataloader_val)
+
+            prob_miou = 1 - miou_list
+            print(prob_miou)
+
+            # if miou > max_miou:
+            #     max_miou = miou
+            #     os.makedirs(args.save_model_path, exist_ok=True)
+            #     torch.save(model.module.state_dict(),
+            #                os.path.join(args.save_model_path, 'best_dice_loss.pth'))
             writer.add_scalar('epoch/precision_val', precision, epoch)
             writer.add_scalar('epoch/miou val', miou, epoch)
 
