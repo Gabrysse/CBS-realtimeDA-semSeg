@@ -22,7 +22,7 @@ import pandas as pd
 
 
 # image and label from train_DA_V2 come in a shape like (D, H, W)
-def class_base_styling(image, label, class_id=7, style_id=0, loss='crossentropy'):
+def class_base_styling(image, label, class_id=[7], style_id=0, loss='crossentropy'):
     # Creation of styling model
     style_model = create_style_model(style_id)
 
@@ -101,7 +101,9 @@ def get_masked_image(label, image, category, bg=0):
 
     output = label[:, :]
 
-    bin_mask = (output == category).astype('uint8')
+    # bin_mask = (output == category).astype('uint8')
+    bin_mask = np.isin(output, category).astype('uint8')
+
     if bg:
         bin_mask = 1 - bin_mask
 
