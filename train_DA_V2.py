@@ -102,12 +102,6 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
 
     for epoch in range(curr_epoch + 1, args.num_epochs + 1):
 
-        indexes_toStyle = []
-
-        for i in range(11):
-            if random.random() < prob_miou[i] * lambda_p:
-                indexes_toStyle.append(i)
-
         # lr_seg = poly_lr_scheduler(optimizer, args.learning_rate, iter=epoch, max_iter=args.num_epochs)
         adjust_learning_rate(optimizer, args.learning_rate, iter=epoch, max_iter=args.num_epochs)
         adjust_learning_rate(optimizer_D, args.learning_rate_D, iter=epoch, max_iter=args.num_epochs)
@@ -147,6 +141,12 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
             data, label = batch
 
             for j in range(args.batch_size):
+                indexes_toStyle = []
+
+                for i in range(11):
+                    if random.random() < prob_miou[i] * lambda_p:
+                        indexes_toStyle.append(i)
+
                 # img = transforms.ToPILImage()(data[j])
                 # img.save(str(j) + ".png")
 
