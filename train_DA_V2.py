@@ -98,13 +98,13 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
     target_label = 1
 
     lambda_p = 0.5
-    prob_miou = np.ones(12)
+    prob_miou = np.ones(11)
 
     for epoch in range(curr_epoch + 1, args.num_epochs + 1):
 
         indexes_toStyle = []
 
-        for i in range(12):
+        for i in range(11):
             if random.random() < prob_miou[i] * lambda_p:
                 indexes_toStyle.append(i)
 
