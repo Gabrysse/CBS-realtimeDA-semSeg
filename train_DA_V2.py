@@ -20,6 +20,7 @@ from utils import reverse_one_hot, compute_global_accuracy, fast_hist, \
     per_class_iu, adjust_learning_rate
 from loss import DiceLoss, loss_calc
 from utils_CBS import class_base_styling
+import random
 
 
 # noinspection DuplicatedCode
@@ -99,6 +100,12 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
     target_label = 1
 
     for epoch in range(curr_epoch + 1, args.num_epochs + 1):
+
+        indexes_toStyle = []
+
+        for i in range(12):
+            if random.random() < prob_miou[i] * lambda_p:
+                indexes_toStyle.append(i)
 
         # lr_seg = poly_lr_scheduler(optimizer, args.learning_rate, iter=epoch, max_iter=args.num_epochs)
         adjust_learning_rate(optimizer, args.learning_rate, iter=epoch, max_iter=args.num_epochs)
@@ -275,6 +282,7 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
             print("*" * 100, "\n", sep="")
         #
         # **** Validation model saving ****
+        args.validation_step = 1
         if epoch % args.validation_step == 0 and epoch != 0:
             precision, miou = val(args, model, dataloader_val)
             if miou > max_miou:
