@@ -143,9 +143,9 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
             for j in range(args.batch_size):
                 indexes_toStyle = []
 
-                for i in range(11):
-                    if random.random() < prob_miou[i] * lambda_p:
-                        indexes_toStyle.append(i)
+                for i_class in range(11):
+                    if random.random() < prob_miou[i_class] * lambda_p:
+                        indexes_toStyle.append(i_class)
 
                 # img = transforms.ToPILImage()(data[j])
                 # img.save(str(j) + ".png")
