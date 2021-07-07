@@ -98,7 +98,7 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
     target_label = 1
 
     lambda_p = 0.5
-    prob_miou = np.ones(11)
+    prob_miou = np.zeros(11)
 
     for epoch in range(curr_epoch + 1, args.num_epochs + 1):
 
