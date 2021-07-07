@@ -147,8 +147,8 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
                     if random.random() < prob_miou[i_class] * lambda_p:
                         indexes_toStyle.append(i_class)
 
-                img = transforms.ToPILImage()(data[j])
-                img.save("./images/"+str(j) + ".png")
+                # img = transforms.ToPILImage()(data[j])
+                # img.save("./images/"+str(j) + ".png")
 
                 stylzed_img = class_base_styling(data[j].numpy(), label[j].numpy(), class_id=indexes_toStyle,
                                                  style_id=2, loss=args.loss, j=j)
@@ -158,13 +158,13 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
                 data[j] = transforms.Lambda(lambda x: x.div(255))(stylzed_img)
                 # print(data[j].shape)
 
-                img = transforms.ToPILImage()(data[j])
-                img.save("./images/"+str(j) + "_S.png")
+                # img = transforms.ToPILImage()(data[j])
+                # img.save("./images/"+str(j) + "_S.png")
 
                 data[j] = transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))(data[j])
 
-                img = transforms.ToPILImage()(data[j])
-                img.save("./images/"+str(j) + "_SN.png")
+                # img = transforms.ToPILImage()(data[j])
+                # img.save("./images/"+str(j) + "_SN.png")
 
             data = data.cuda()
             label = label.long().cuda()
