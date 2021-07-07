@@ -132,7 +132,7 @@ def get_masked_image(label, image, category, bg=0):
     masked = (bin_mask[:, :, None] * image) * 255
 
     img = Image.fromarray(masked.astype('uint8'))
-    img.save("./images/" + str(bg) + "_fg-bg.png")
+    # img.save("./images/" + str(bg) + "_fg-bg.png")
 
     return masked
 
