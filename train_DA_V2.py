@@ -98,7 +98,7 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
     target_label = 1
 
     lambda_p = 0.5
-    prob_miou = np.zeros(11)
+    prob_miou = np.ones(11)
 
     for epoch in range(curr_epoch + 1, args.num_epochs + 1):
 
@@ -147,23 +147,24 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
                     if random.random() < prob_miou[i_class] * lambda_p:
                         indexes_toStyle.append(i_class)
 
-                # img = transforms.ToPILImage()(data[j])
-                # img.save("./images/"+str(j) + ".png")
+                img = transforms.ToPILImage()(data[j])
+                img.save("./images/"+str(j) + ".png")
 
                 stylzed_img = class_base_styling(data[j].numpy(), label[j].numpy(), class_id=indexes_toStyle,
                                                  style_id=2, loss=args.loss, j=j)
 
                 # data[j] = torch.from_numpy(stylzed_img.transpose(2, 0, 1))
-                data[j] = stylzed_img
+                stylzed_img = stylzed_img.clamp(0, 255)
+                data[j] = transforms.Lambda(lambda x: x.div(255))(stylzed_img)
                 # print(data[j].shape)
 
-                # img = transforms.ToPILImage()(data[j])
-                # img.save("./images/"+str(j) + "_S.png")
+                img = transforms.ToPILImage()(data[j])
+                img.save("./images/"+str(j) + "_S.png")
 
                 data[j] = transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))(data[j])
 
-                # img = transforms.ToPILImage()(data[j])
-                # img.save("./images/"+str(j) + "_SN.png")
+                img = transforms.ToPILImage()(data[j])
+                img.save("./images/"+str(j) + "_SN.png")
 
             data = data.cuda()
             label = label.long().cuda()
