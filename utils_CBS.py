@@ -12,7 +12,7 @@ from matplotlib.patches import Polygon
 from matplotlib.figure import Figure
 # =====================================
 # helpers
-import cv2, glob, re
+import glob, re
 from model import transformer_net
 # import dabnet
 import torch
@@ -50,7 +50,7 @@ def class_base_styling(image, label, class_id=[7], style_id=0, loss='crossentrop
     #     image = image.unsqueeze(0)
     # image_style1 = get_styled_image(style_model, image)
 
-    image_style1 = stylize(image)
+    image_style1 = stylize(image, style_id=style_id)
 
     # save_image("./images/"+str(j)+"imagestyle.png", image_style1)
 
@@ -85,6 +85,10 @@ def get_styled_image(style_model, image):
     img = img.transpose(1, 2, 0).astype("uint8")
     return img
     # return styled
+
+
+def get_style_list_size(path='./model/styles/*.pth'):
+    return len(glob.glob(path))
 
 
 def create_style_model(style_number=0, path='./model/styles/*.pth'):
@@ -144,7 +148,7 @@ def save_image(fname, data):
     img.save(fname)
 
 
-def stylize(content_image, modelPath='./model/styles/camvid3.pth'):
+def stylize(content_image, style_id=0):
 
     content_transform = transforms.Compose([
         transforms.ToTensor(),
@@ -159,8 +163,9 @@ def stylize(content_image, modelPath='./model/styles/camvid3.pth'):
         content_image = content_image.unsqueeze(0)
 
     with torch.no_grad():
+        model_path = glob.glob('./model/styles/*.pth')[style_id]
         style_model = transformer_net.TransformerNet()
-        state_dict = torch.load(modelPath)
+        state_dict = torch.load(model_path)
 
         # remove saved deprecated running_* keys in InstanceNorm from the checkpoint
         for k in list(state_dict.keys()):

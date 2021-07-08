@@ -4,7 +4,6 @@ import os
 from scipy import ndimage
 from torchvision import transforms
 import torchvision.transforms.functional
-import cv2
 from PIL import Image
 import pandas as pd
 import numpy as np
