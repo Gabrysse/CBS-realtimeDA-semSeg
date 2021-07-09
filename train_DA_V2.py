@@ -297,8 +297,8 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
         if epoch % args.validation_step == 0 and epoch != 0:
             precision, miou, miou_list = val(args, model, dataloader_val)
 
-            prob_miou = 1 - miou_list
-            print(prob_miou)
+            #prob_miou = 1 - miou_list
+            #print(prob_miou)
 
             # if miou > max_miou:
             #     max_miou = miou
