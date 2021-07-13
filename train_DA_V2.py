@@ -281,7 +281,6 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S, data
             print("*" * 100, "\n", sep="")
 
         # **** Validation model saving ****
-        args.validation_step = 1
         if epoch % args.validation_step == 0 and epoch != 0:
             precision, miou, miou_list = val(args, model, dataloader_val, csv_path)
 
@@ -439,5 +438,6 @@ if __name__ == '__main__':
         # '--pretrained_model_path', './checkpoints_DA/latest_DA_model_checkpoint.pth',
         '--checkpoint_step', '2',
         '--loss', 'crossentropy',
+        '--validation_step', '10',
     ]
     main(params)

@@ -73,7 +73,7 @@ def train(args, model, optimizer, dataloader_train, dataloader_val, csv_path, cu
     max_miou = 0
     step = 0
 
-    for epoch in range(curr_epoch, args.num_epochs):
+    for epoch in range(curr_epoch + 1, args.num_epochs + 1):
         lr = poly_lr_scheduler(optimizer, args.learning_rate, iter=epoch, max_iter=args.num_epochs)
         model.train()
 

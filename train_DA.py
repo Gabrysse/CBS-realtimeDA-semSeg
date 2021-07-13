@@ -91,7 +91,7 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
     source_label = 0
     target_label = 1
 
-    for epoch in range(curr_epoch, args.num_epochs):
+    for epoch in range(curr_epoch + 1, args.num_epochs + 1):
 
         adjust_learning_rate(optimizer, args.learning_rate, iter=epoch, max_iter=args.num_epochs)
         adjust_learning_rate(optimizer_D, args.learning_rate_D, iter=epoch, max_iter=args.num_epochs)
