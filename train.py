@@ -250,7 +250,7 @@ if __name__ == '__main__':
         '--save_model_path', './checkpoints_18_sgd_100',
         '--context_path', 'resnet18',  # set resnet18 or resnet101, only support resnet18 and resnet101
         '--optimizer', 'sgd',
-        '--pretrained_model_path', './checkpoints_18_sgd_100/latest_dice_loss.pth',
+        # '--pretrained_model_path', './checkpoints_18_sgd_100/latest_dice_loss.pth',
         '--checkpoint_step', '2',
         '--loss', 'dice',
     ]
