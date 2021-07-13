@@ -1,25 +1,22 @@
 import argparse
-from torch import nn
+import os
+import random
+import numpy as np
+import torch
+import torch.nn.functional as F
+import tqdm
+from tensorboardX import SummaryWriter
 from torch.autograd import Variable
 from torch.cuda.amp import GradScaler, autocast
-from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
-import torch.nn.functional as F
-from dataset.CamVid import CamVid
 from torchvision import transforms
+from dataset.CamVid import CamVid
 from dataset.IDDA import IDDA
-import os
-from model.build_BiSeNet import BiSeNet
-import torch
-from tensorboardX import SummaryWriter
-import tqdm
-import numpy as np
-from model.discriminator import Discriminator
-from utils import cal_miou, reverse_one_hot, compute_global_accuracy, fast_hist, \
-    per_class_iu, adjust_learning_rate
 from loss import DiceLoss, loss_calc
+from model.build_BiSeNet import BiSeNet
+from model.discriminator import Discriminator
+from utils import cal_miou, reverse_one_hot, compute_global_accuracy, fast_hist, per_class_iu, adjust_learning_rate
 from utils_CBS import class_base_styling, get_style_list_size
-import random
 
 
 # noinspection DuplicatedCode
@@ -76,16 +73,14 @@ def val(args, model, dataloader, csv_path='../datasets/CamVid/class_dict.csv'):
 
 
 # noinspection DuplicatedCode
-def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
-          dataloader_train_T, dataloader_val, curr_epoch):
+def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S, dataloader_train_T, dataloader_val,
+          curr_epoch):
     writer = SummaryWriter(comment=''.format(args.optimizer, args.context_path))
     scaler = GradScaler()
 
     # BisNet loss
     if args.loss == 'dice':
         loss_func = DiceLoss()
-    # elif args.loss == 'crossentropy':
-    #     loss_func = torch.nn.CrossEntropyLoss()
 
     # Discriminator loss
     bce_loss = torch.nn.BCEWithLogitsLoss()
@@ -104,7 +99,6 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
 
     for epoch in range(curr_epoch + 1, args.num_epochs + 1):
 
-        # lr_seg = poly_lr_scheduler(optimizer, args.learning_rate, iter=epoch, max_iter=args.num_epochs)
         adjust_learning_rate(optimizer, args.learning_rate, iter=epoch, max_iter=args.num_epochs)
         adjust_learning_rate(optimizer_D, args.learning_rate_D, iter=epoch, max_iter=args.num_epochs)
         lr_seg = optimizer.param_groups[0]['lr']
@@ -124,14 +118,10 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
         S_size = len(dataloader_train_S)
         T_size = len(dataloader_train_T)
 
-
         for i in range(T_size):
             # -----------------------------------------------------------------------------------------------------------
             # train G (segmentation network)
             # -----------------------------------------------------------------------------------------------------------
-
-            # adjust_learning_rate(optimizer, args.learning_rate, iter=epoch, max_iter=args.num_epochs)
-            # adjust_learning_rate(optimizer_D, args.learning_rate, iter=epoch, max_iter=args.num_epochs)
             optimizer.zero_grad()
             optimizer_D.zero_grad()
 
@@ -152,24 +142,22 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
 
                 style_rand = random.randrange(0, style_len)
 
-                #img = transforms.ToPILImage()(data[j])
-                #img.save("./images/"+str(j) + ".png")
+                # img = transforms.ToPILImage()(data[j])
+                # img.save("./images/"+str(j) + ".png")
 
                 stylzed_img = class_base_styling(data[j].numpy(), label[j].numpy(), class_id=indexes_toStyle,
                                                  style_id=style_rand, loss=args.loss, j=j)
 
-                # data[j] = torch.from_numpy(stylzed_img.transpose(2, 0, 1))
                 stylzed_img = stylzed_img.clamp(0, 255)
                 data[j] = transforms.Lambda(lambda x: x.div(255))(stylzed_img)
-                # print(data[j].shape)
 
-                #img = transforms.ToPILImage()(data[j])
-                #img.save("./images/"+str(j) + "_S.png")
+                # img = transforms.ToPILImage()(data[j])
+                # img.save("./images/"+str(j) + "_S.png")
 
                 data[j] = transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))(data[j])
 
-                #img = transforms.ToPILImage()(data[j])
-                #img.save("./images/"+str(j) + "_SN.png")
+                # img = transforms.ToPILImage()(data[j])
+                # img.save("./images/"+str(j) + "_SN.png")
 
             data = data.cuda()
             label = label.long().cuda()
@@ -291,20 +279,17 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
                        os.path.join(args.save_model_path, 'latest_DA_model_checkpoint.pth'))
             print("Done!")
             print("*" * 100, "\n", sep="")
-        #
+
         # **** Validation model saving ****
         args.validation_step = 1
         if epoch % args.validation_step == 0 and epoch != 0:
             precision, miou, miou_list = val(args, model, dataloader_val)
 
-            #prob_miou = 1 - miou_list
-            #print(prob_miou)
-
-            # if miou > max_miou:
-            #     max_miou = miou
-            #     os.makedirs(args.save_model_path, exist_ok=True)
-            #     torch.save(model.module.state_dict(),
-            #                os.path.join(args.save_model_path, 'best_dice_loss.pth'))
+            if miou > max_miou:
+                max_miou = miou
+                os.makedirs(args.save_model_path, exist_ok=True)
+                torch.save(model.module.state_dict(),
+                           os.path.join(args.save_model_path, 'best_dice_loss.pth'))
             writer.add_scalar('epoch/precision_val', precision, epoch)
             writer.add_scalar('epoch/miou val', miou, epoch)
 
@@ -434,7 +419,7 @@ def main(params):
     train(args, model, model_D, optimizer, optimizer_D,
           dataloader_train_S, dataloader_train_T, dataloader_val, curr_epoch)
 
-    val(args, model, dataloader_val)
+    val(args, model, dataloader_val, csv_path)
 
 
 if __name__ == '__main__':

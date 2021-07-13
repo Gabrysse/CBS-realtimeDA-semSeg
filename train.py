@@ -1,21 +1,21 @@
 import argparse
-from torch.cuda.amp import GradScaler, autocast
-from torch.utils.data import Dataset
-from torch.utils.data import DataLoader
-from dataset.CamVid import CamVid
 import os
-from model.build_BiSeNet import BiSeNet
-import torch
-from tensorboardX import SummaryWriter
-import tqdm
 import numpy as np
+import torch
+import tqdm
+from tensorboardX import SummaryWriter
+from torch.cuda.amp import GradScaler, autocast
+from torch.utils.data import DataLoader
+
+from dataset.CamVid import CamVid
+from loss import DiceLoss
+from model.build_BiSeNet import BiSeNet
 from utils import poly_lr_scheduler
 from utils import reverse_one_hot, compute_global_accuracy, fast_hist, \
     per_class_iu
-from loss import DiceLoss
 
 
-def val(args, model, dataloader):
+def val(args, model, dataloader, csv_path):
     print("\n", "=" * 100, sep="")
     print('Start val!')
     # label_info = get_label_info(csv_path)
@@ -44,9 +44,6 @@ def val(args, model, dataloader):
             precision = compute_global_accuracy(predict, label)
             hist += fast_hist(label.flatten(), predict.flatten(), args.num_classes)
 
-            # there is no need to transform the one-hot array to visual RGB array
-            # predict = colour_code_segmentation(np.array(predict), label_info)
-            # label = colour_code_segmentation(np.array(label), label_info)
             precision_record.append(precision)
         precision = np.mean(precision_record)
         # miou = np.mean(per_class_iu(hist))
@@ -103,9 +100,7 @@ def train(args, model, optimizer, dataloader_train, dataloader_val, curr_epoch):
 
             optimizer.zero_grad()
             scaler.scale(loss).backward()
-            # loss.backward()
             scaler.step(optimizer)
-            # optimizer.step()
             step += 1
 
             writer.add_scalar('loss_step', loss, step)
@@ -241,8 +236,7 @@ def main(params):
     # train
     train(args, model, optimizer, dataloader_train, dataloader_val, curr_epoch)
 
-    # val(args, model, dataloader_val, csv_path)
-    val(args, model, dataloader_val)
+    val(args, model, dataloader_val, csv_path)
 
 
 if __name__ == '__main__':
