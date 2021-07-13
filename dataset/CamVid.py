@@ -6,7 +6,8 @@ import numpy as np
 from PIL import Image
 from scipy import ndimage
 from torchvision import transforms
-from utils import RandomCrop, one_hot_it_v11, one_hot_it_v11_dice, colorize_mask, augmentation, augmentation_pixel
+from utils import RandomCrop, one_hot_it_v11, one_hot_it_v11_dice, colorize_mask, augmentation, augmentation_pixel, \
+                  get_label_info
 
 
 # noinspection PyShadowingNames
