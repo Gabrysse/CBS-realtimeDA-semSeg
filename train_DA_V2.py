@@ -1,26 +1,26 @@
 import argparse
-from torch import nn
+import os
+import random
+import numpy as np
+import torch
+import torch.nn.functional as F
+import tqdm
+from tensorboardX import SummaryWriter
 from torch.autograd import Variable
 from torch.cuda.amp import GradScaler, autocast
-from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
-import torch.nn.functional as F
+from torchvision import transforms
 from dataset.CamVid import CamVid
 from dataset.IDDA import IDDA
-import os
-from model.build_BiSeNet import BiSeNet
-import torch
-from tensorboardX import SummaryWriter
-import tqdm
-import numpy as np
-from model.discriminator import Discriminator
-from utils import poly_lr_scheduler
-from utils import reverse_one_hot, compute_global_accuracy, fast_hist, \
-    per_class_iu, adjust_learning_rate
 from loss import DiceLoss, loss_calc
+from model.build_BiSeNet import BiSeNet
+from model.discriminator import Discriminator
+from utils import cal_miou, reverse_one_hot, compute_global_accuracy, fast_hist, per_class_iu, adjust_learning_rate
+from utils_CBS import class_base_styling, get_style_list_size
+
 
 # noinspection DuplicatedCode
-def val(args, model, dataloader):
+def val(args, model, dataloader, csv_path):
     print("\n", "=" * 100, sep="")
     print('Start val!')
     # label_info = get_label_info(csv_path)
@@ -51,17 +51,16 @@ def val(args, model, dataloader):
             precision = compute_global_accuracy(predict, label)
             hist += fast_hist(label.flatten(), predict.flatten(), args.num_classes)
 
-            # there is no need to transform the one-hot array to visual RGB array
-            # predict = colour_code_segmentation(np.array(predict), label_info)
-            # label = colour_code_segmentation(np.array(label), label_info)
             precision_record.append(precision)
         precision = np.mean(precision_record)
-        # miou = np.mean(per_class_iu(hist))
+
         miou_list = per_class_iu(hist)[:-1]
-        # miou_dict, miou = cal_miou(miou_list, csv_path)
+        miou_dict, miou = cal_miou(miou_list, csv_path)
         miou = np.mean(miou_list)
         print(f'precision per pixel for test: {precision:.3f}')
         print(f'mIoU for validation: {miou:.3f}')
+
+        print(miou_dict)
         # miou_str = ''
         # for key in miou_dict:
         #     miou_str += '{}:{},\n'.format(key, miou_dict[key])
@@ -70,20 +69,18 @@ def val(args, model, dataloader):
 
         print("=" * 100, "\n", sep="")
 
-        return precision, miou
+        return precision, miou, miou_list
 
 
 # noinspection DuplicatedCode
-def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
-          dataloader_train_T, dataloader_val, curr_epoch):
+def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S, dataloader_train_T, dataloader_val,
+          csv_path, curr_epoch):
     writer = SummaryWriter(comment=''.format(args.optimizer, args.context_path))
     scaler = GradScaler()
 
     # BisNet loss
     if args.loss == 'dice':
         loss_func = DiceLoss()
-    # elif args.loss == 'crossentropy':
-    #     loss_func = torch.nn.CrossEntropyLoss()
 
     # Discriminator loss
     bce_loss = torch.nn.BCEWithLogitsLoss()
@@ -95,9 +92,13 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
     source_label = 0
     target_label = 1
 
-    for epoch in range(curr_epoch, args.num_epochs):
+    lambda_p = 0.5
+    prob_miou = np.ones(11)
 
-        # lr_seg = poly_lr_scheduler(optimizer, args.learning_rate, iter=epoch, max_iter=args.num_epochs)
+    style_len = get_style_list_size()
+
+    for epoch in range(curr_epoch + 1, args.num_epochs + 1):
+
         adjust_learning_rate(optimizer, args.learning_rate, iter=epoch, max_iter=args.num_epochs)
         adjust_learning_rate(optimizer_D, args.learning_rate_D, iter=epoch, max_iter=args.num_epochs)
         lr_seg = optimizer.param_groups[0]['lr']
@@ -121,9 +122,6 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
             # -----------------------------------------------------------------------------------------------------------
             # train G (segmentation network)
             # -----------------------------------------------------------------------------------------------------------
-
-            # adjust_learning_rate(optimizer, args.learning_rate, iter=epoch, max_iter=args.num_epochs)
-            # adjust_learning_rate(optimizer_D, args.learning_rate, iter=epoch, max_iter=args.num_epochs)
             optimizer.zero_grad()
             optimizer_D.zero_grad()
 
@@ -134,6 +132,33 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
             # train with SOURCE ***********************************************
             _, batch = next(sourceloader_iter)
             data, label = batch
+
+            for j in range(args.batch_size):
+                indexes_toStyle = []
+
+                for i_class in range(11):
+                    if random.random() < prob_miou[i_class] * lambda_p:
+                        indexes_toStyle.append(i_class)
+
+                style_rand = random.randrange(0, style_len)
+
+                # img = transforms.ToPILImage()(data[j])
+                # img.save("./images/"+str(j) + ".png")
+
+                stylzed_img = class_base_styling(data[j].numpy(), label[j].numpy(), class_id=indexes_toStyle,
+                                                 style_id=style_rand, loss=args.loss, j=j)
+
+                stylzed_img = stylzed_img.clamp(0, 255)
+                data[j] = transforms.Lambda(lambda x: x.div(255))(stylzed_img)
+
+                # img = transforms.ToPILImage()(data[j])
+                # img.save("./images/"+str(j) + "_S.png")
+
+                data[j] = transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))(data[j])
+
+                # img = transforms.ToPILImage()(data[j])
+                # img.save("./images/"+str(j) + "_SN.png")
+
             data = data.cuda()
             label = label.long().cuda()
 
@@ -254,10 +279,11 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
                        os.path.join(args.save_model_path, 'latest_DA_model_checkpoint.pth'))
             print("Done!")
             print("*" * 100, "\n", sep="")
-        #
+
         # **** Validation model saving ****
         if epoch % args.validation_step == 0 and epoch != 0:
-            precision, miou = val(args, model, dataloader_val)
+            precision, miou, miou_list = val(args, model, dataloader_val, csv_path)
+
             if miou > max_miou:
                 max_miou = miou
                 os.makedirs(args.save_model_path, exist_ok=True)
@@ -389,15 +415,15 @@ def main(params):
         print("*" * 100, "\n", sep="")
 
     # train
-    train(args, model, model_D, optimizer, optimizer_D,
-          dataloader_train_S, dataloader_train_T, dataloader_val, curr_epoch)
+    train(args, model, model_D, optimizer, optimizer_D,dataloader_train_S, dataloader_train_T, dataloader_val,
+          csv_path, curr_epoch)
 
-    val(args, model, dataloader_val)
+    val(args, model, dataloader_val, csv_path)
 
 
 if __name__ == '__main__':
     params = [
-        '--num_epochs', '100',
+        '--num_epochs', '50',
         '--learning_rate', '2.5e-2',
         '--learning_rate_D', '1e-4',
         '--dataCamVid', '../datasets/CamVid/',
@@ -411,6 +437,7 @@ if __name__ == '__main__':
         '--optimizer', 'sgd',
         # '--pretrained_model_path', './checkpoints_DA/latest_DA_model_checkpoint.pth',
         '--checkpoint_step', '2',
-        '--loss', 'dice',
+        '--loss', 'crossentropy',
+        '--validation_step', '10',
     ]
     main(params)

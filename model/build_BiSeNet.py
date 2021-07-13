@@ -1,7 +1,7 @@
 import torch
+import warnings
 from torch import nn
 from model.build_contextpath import build_contextpath
-import warnings
 
 warnings.filterwarnings(action='ignore')
 
@@ -182,14 +182,5 @@ if __name__ == '__main__':
     model = model.cuda()
     x = torch.rand(2, 3, 256, 256)
     record = model.parameters()
-    # for key, params in model.named_parameters():
-    #     if 'bn' in key:
-    #         params.requires_grad = False
-    from utils import group_weight
-
-    # params_list = []
-    # for module in model.mul_lr:
-    #     params_list = group_weight(params_list, module, nn.BatchNorm2d, 10)
-    # params_list = group_weight(params_list, model.context_path, torch.nn.BatchNorm2d, 1)
 
     print(model.parameters())
