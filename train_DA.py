@@ -15,7 +15,7 @@ from loss import DiceLoss, loss_calc
 from model.build_BiSeNet import BiSeNet
 from model.discriminator import Discriminator
 from utils import reverse_one_hot, compute_global_accuracy, fast_hist, \
-    per_class_iu, adjust_learning_rate
+    per_class_iu, adjust_learning_rate, cal_miou
 
 
 # noinspection DuplicatedCode
@@ -54,10 +54,12 @@ def val(args, model, dataloader, csv_path):
         precision = np.mean(precision_record)
         # miou = np.mean(per_class_iu(hist))
         miou_list = per_class_iu(hist)[:-1]
-        # miou_dict, miou = cal_miou(miou_list, csv_path)
+        miou_dict, miou = cal_miou(miou_list, csv_path)
         miou = np.mean(miou_list)
         print(f'precision per pixel for test: {precision:.3f}')
         print(f'mIoU for validation: {miou:.3f}')
+
+        print(miou_dict)
         # miou_str = ''
         # for key in miou_dict:
         #     miou_str += '{}:{},\n'.format(key, miou_dict[key])
@@ -71,7 +73,7 @@ def val(args, model, dataloader, csv_path):
 
 # noinspection DuplicatedCode
 def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
-          dataloader_train_T, dataloader_val, curr_epoch):
+          dataloader_train_T, dataloader_val, csv_path, curr_epoch):
     writer = SummaryWriter(comment=''.format(args.optimizer, args.context_path))
     scaler = GradScaler()
 
@@ -247,7 +249,7 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S,
         #
         # **** Validation model saving ****
         if epoch % args.validation_step == 0 and epoch != 0:
-            precision, miou = val(args, model, dataloader_val)
+            precision, miou = val(args, model, dataloader_val, csv_path)
             if miou > max_miou:
                 max_miou = miou
                 os.makedirs(args.save_model_path, exist_ok=True)
@@ -377,8 +379,8 @@ def main(params):
         print("*" * 100, "\n", sep="")
 
     # train
-    train(args, model, model_D, optimizer, optimizer_D,
-          dataloader_train_S, dataloader_train_T, dataloader_val, curr_epoch)
+    train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S, dataloader_train_T, dataloader_val,
+          csv_path, curr_epoch)
 
     val(args, model, dataloader_val, csv_path)
 

@@ -20,7 +20,7 @@ from utils_CBS import class_base_styling, get_style_list_size
 
 
 # noinspection DuplicatedCode
-def val(args, model, dataloader, csv_path='../datasets/CamVid/class_dict.csv'):
+def val(args, model, dataloader, csv_path):
     print("\n", "=" * 100, sep="")
     print('Start val!')
     # label_info = get_label_info(csv_path)
@@ -74,7 +74,7 @@ def val(args, model, dataloader, csv_path='../datasets/CamVid/class_dict.csv'):
 
 # noinspection DuplicatedCode
 def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S, dataloader_train_T, dataloader_val,
-          curr_epoch):
+          csv_path, curr_epoch):
     writer = SummaryWriter(comment=''.format(args.optimizer, args.context_path))
     scaler = GradScaler()
 
@@ -283,7 +283,7 @@ def train(args, model, model_D, optimizer, optimizer_D, dataloader_train_S, data
         # **** Validation model saving ****
         args.validation_step = 1
         if epoch % args.validation_step == 0 and epoch != 0:
-            precision, miou, miou_list = val(args, model, dataloader_val)
+            precision, miou, miou_list = val(args, model, dataloader_val, csv_path)
 
             if miou > max_miou:
                 max_miou = miou
@@ -416,8 +416,8 @@ def main(params):
         print("*" * 100, "\n", sep="")
 
     # train
-    train(args, model, model_D, optimizer, optimizer_D,
-          dataloader_train_S, dataloader_train_T, dataloader_val, curr_epoch)
+    train(args, model, model_D, optimizer, optimizer_D,dataloader_train_S, dataloader_train_T, dataloader_val,
+          csv_path, curr_epoch)
 
     val(args, model, dataloader_val, csv_path)
 

@@ -11,8 +11,7 @@ from dataset.CamVid import CamVid
 from loss import DiceLoss
 from model.build_BiSeNet import BiSeNet
 from utils import poly_lr_scheduler
-from utils import reverse_one_hot, compute_global_accuracy, fast_hist, \
-    per_class_iu
+from utils import reverse_one_hot, compute_global_accuracy, fast_hist, per_class_iu
 
 
 def val(args, model, dataloader, csv_path):
@@ -63,7 +62,7 @@ def val(args, model, dataloader, csv_path):
         return precision, miou
 
 
-def train(args, model, optimizer, dataloader_train, dataloader_val, curr_epoch):
+def train(args, model, optimizer, dataloader_train, dataloader_val, csv_path, curr_epoch):
     writer = SummaryWriter(comment=''.format(args.optimizer, args.context_path))
     scaler = GradScaler()
 
@@ -133,7 +132,7 @@ def train(args, model, optimizer, dataloader_train, dataloader_val, curr_epoch):
 
         # **** Validation model saving ****
         if epoch % args.validation_step == 0 and epoch != 0:
-            precision, miou = val(args, model, dataloader_val)
+            precision, miou = val(args, model, dataloader_val, csv_path)
             if miou > max_miou:
                 max_miou = miou
                 os.makedirs(args.save_model_path, exist_ok=True)
@@ -234,7 +233,7 @@ def main(params):
         print("*" * 100, "\n", sep="")
 
     # train
-    train(args, model, optimizer, dataloader_train, dataloader_val, curr_epoch)
+    train(args, model, optimizer, dataloader_train, dataloader_val, csv_path, curr_epoch)
 
     val(args, model, dataloader_val, csv_path)
 
